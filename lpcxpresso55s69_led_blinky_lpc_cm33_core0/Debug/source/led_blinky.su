@@ -1,0 +1,6 @@
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_led_blinky_lpc_cm33_core0\CMSIS/core_cm33.h:2555:22:__NVIC_SetPriority	16	static
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_led_blinky_lpc_cm33_core0\CMSIS/core_cm33.h:3108:26:SysTick_Config	16	static
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_led_blinky_lpc_cm33_core0\drivers/fsl_gpio.h:210:20:GPIO_PortToggle	24	static
+../source/led_blinky.c:34:6:SysTick_Handler	4	static
+../source/led_blinky.c:38:6:SysTick_DelayTicks	16	static
+../source/led_blinky.c:46:5:main	16	static

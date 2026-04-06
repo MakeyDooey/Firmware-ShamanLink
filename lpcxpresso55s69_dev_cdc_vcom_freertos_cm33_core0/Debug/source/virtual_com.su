@@ -1,0 +1,11 @@
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common_arm.h:908:24:DisableGlobalIRQ	16	static
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common_arm.h:934:20:EnableGlobalIRQ	24	static
+../source/virtual_com.c:173:14:USB_DeviceCdcVcomCallback	48	static
+../source/virtual_com.c:394:14:USB_DeviceCallback	40	static
+../source/virtual_com.c:524:13:CDC_VCOM_FreeRTOSEnterCritical	16	static
+../source/virtual_com.c:529:13:CDC_VCOM_FreeRTOSExitCritical	16	static
+../source/virtual_com.c:538:6:USB_DeviceApplicationInit	8	static
+../source/virtual_com.c:575:6:USB_DeviceTask	16	static
+../source/virtual_com.c:594:6:USB_Tx_Task	24	static
+../source/virtual_com.c:623:6:CLI_Task	40	static
+../source/virtual_com.c:673:5:main	16	static

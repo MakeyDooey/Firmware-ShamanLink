@@ -1,0 +1,265 @@
+TODO:
+
+(Dom's Validates)
+ -> LEDs / reset button 		[x]
+ -> UART
+ -> DC-DC internal converter (turn on)
+ -> CLK
+ -> RS-485 connection (w/ UART)
+- - - - - - - - - - - - - - - - - - - - // theoretical stopping point
+ -> SWD out
+ -> JTAG out 
+ -> USB comms
+ -> MicroSD
+ -> Doom?
+
+Recommended Development Workflow:
+
+1. blinky
+2. establish VCOM over USB, blink the LED based on user input to FreeRTOSCLI task
+3. write a command that sends a string out of the RS485 with UART
+
+Project Description:
+I want to program an LPC55S69 using MCUXpresso IDE to serve as a high-performance programmer and bus orchestrator for STM32H7 and STM32G0 MCUs. I have a custom PCB and will use MCULink hardware to initially flash the LPC55S69 via its SWD pins. The goal is for a user to connect a computer to the PCB's USB-C port and interact with a FreeRTOS+CLI (instantiated over a USB CDC VCOM interface) to execute commands. These commands include flashing a target board via the SWD protocol using designated pins, sending/receiving messages over a half-duplex multi-drop RS485 bus where the LPC55S69, H7, and G0 all reside, and manually toggle certain on-board user LEDs on or off.
+
+The design must leverage the LPC55S69’s dual-core architecture: Core 0 (master) will manage the FreeRTOS tasks, USB stack, and CLI parsing, while Core 1 (worker) will handle timing-critical SWD bit-banging and low-level RS485 direction control (DE/RE) to ensure high-speed, reliable communication. Inter-core communication will be handled via OpenAMP (RPMsg-Lite) to create a seamless data pipeline. When flashing a target, no files should be stored on the NXP; instead, data should be streamed from the host computer, passed through the OpenAMP buffers, and written to the target in real-time. Finally, the system will use onboard LEDs to provide visual telemetry, such as indicating an active USB connection, bus activity, or specific flashing errors.
+
+// Establishing a CDC USB VCOM on the LPC55S69
+
+(CDC USB Wikipedia) 
+Abstract Control Model (ACM): Protocol defined on the CDC specification that can be used to implement a general-purpose serial UART. Commonly implemented in microcontrollers to provide a serial console for configuring and debugging embedded system. 
+
+(Virtual COM port Wikipedia) 
+A software representation of a serial port that either does not connect to a real serial port, or adds functionality to a real serial port through software extension. 
+
+// Using the MCU-Link to program the ShamanLink
+
+(UM11931 User Manual from NXP docs)
+MCU-Link Base standalone Debug Probe
+
+Main Features
+ - UART to USB bridge (VCOM) 
+ - CMSIS-DAP firmware to support all NXP Arm Comtex-M based MCUs with SWD debug interfaces 
+ - High speed USB host interface 
+ - SWO profiling and I/O features
+ - CSMIS-SWO support
+
+Board Layout
+
+J1: Host USB connector
+J2: LPC55S69 SWD connector (for development of custom debug probe code only)
+J3: Firmware update jumper (reinstall and re-power to update firmware)
+J6: SWD connector for connection to tagret system 
+J7: VCOM connection 
+J8: Digital expansion connector
+
+
+Installation and Firmware Options
+ - Factory programmed with NXP's CMSIS-DAP protocol based firmware
+ - This model of MCU-Link cannot run the version of J-Link firmware from SEGGER that is available for other MCU-Link
+ - Some early product units may not have a debug probe firmaware image installed. If this is the case none of the LEDs will light up when the board is connected to a host computer. // currently the case
+
+Manually updating MCU-Link firmware 
+ 1. It must first be powered up in the ISP mode. To do this, insert jumper J3 and connect MCU-Link to your host computer using a micro-B USB
+ 2. The red STATUS LED (LED3) should light up and stay on. 
+ 3. The board enumerates on the host computer an HID class USB device * 
+	- Note: from version V3.xxx onwards, the MCU-Link firmware uses WinUSB instead of HID for higher performance 	(requires MCUXpresso >=11.7) (MCUXpresso for VS Code versions recommended)
+ 4. Nagivate to the MCU-LINK_installer\scripts subdirectory
+	- install LinkServer to get these scripts // download link doesn't exists anymore
+	- Recent MCUXpresso IDE versions integrate LinkServer as a stand-alone product installed in a folder located 	at the same level as the IDE product (C:\nxp\LinkServer_25.6.131)
+ 5. Run the program_CMSIS.cmd script
+ 6. Follow nagivation instructions from the script
+ 7. Unplug the board, remove J3, and reconnect the board 
+ 8. After programming the MCU-Link with the CMSIS-DAP firmware, a USB serial bus device and a virtual com port will enumerate. The status LED repeatedly fades from on to off and back again ("breathing") 
+
+// Success  
+C:\nxp\LinkServer_25.6.131>linkserver probes
+  #  Description                       Serial         Device    Board
+---  --------------------------------  -------------  --------  -------
+  1  MCU-LINK (r0FB) CMSIS-DAP V3.160  C5XPNEE42OCU4
+
+Use with other IDEs (Not MCUXpresso)
+
+MCU-Link should be recognized as a CMSIS-DAP probe by other IDEs, and should be usable with standard settings for that probe type. Follow IDE vendor instructions for setup and use of CMSIS-DAP.
+
+Feature Descriptions
+ - Note: the MCU-Link can be back-powered by a target if the MCU-Link itself is not powered via USB. For this reason it is recommended that the power be applied to the MCU-Link before the target.
+ - The MCU-Link Base Probe cannot power a target system, so uses a sensing circuit to detect the target supply voltage and set up level shifter voltages accordingly. 
+ - If issues are seen with the target system supply being affected by the MCU-Link being connected then R16 may be removed and SJ1 changed to connect to position 1-2. This will fix the level shifters at the voltage level seen at pin 1 of the SWD connector, and require that the target supply can support the VCCB input requirements of the level shifter devices.
+
+================================================================================================
+
+MCU-Link <=> ShamanLink connection / powering order (to unplug go in reverse order)
+1. Power MCU-Link
+	- Connect the MCU-Link to computer via USB-Micro port
+2. Power ShamanLink
+	- Power USB to USB power management board 
+	- Connect management board USB-C output to the ShamanLink
+3. Connect MCU-Link to ShamanLink with jumper wires 
+	- In order: 
+		GND (gray, bottom right), 
+		VCC (red, bottom left), 
+		SWDCLK (yellow, second from the left on top row), 
+		SWDIO (white, top left), 
+		SWDRESET (orange, top right)
+
+================================================================================================
+
+MCUXpresso IDE and the MCU-Link
+
+MCUXpresso IDEs will recognize any type of MCU-Link and will show the probe types and unique identifiers
+of all probes it finds in the probe discovery dialog when starting a debug session. This dialog will also show
+the firmware version, and will show a warning if the firmware is not the latest version. See Section 3.2 for
+information on how to update the firmware. MCUXpresso IDE 11.3 or later must be used when using MCU-Link,
+and version 3.xxx onwards must be used with MCUXpresso for VS Code.
+
+// 2026-04-03: blinky done, usb-freertos test is next 
+
+System prompt
+
+I want to program a LPC55S69 with a USB CDC VCOM and freeRTOS+CLI to be able to toggle on/off different LEDs on my custom PCB using commands. 
+
+Obs.: (gemini) the USB interface is connected to USB1 (Pins 24 & 25, USB1_DP and DM). USB1 on the LPC55S69 is the high-speed controller. This requires specific PHY clocking compared to the full-speed (USB0) controller. 
+
+Recommended SDK Examples
+ - dev_cdc_vcom_freertos: handles the RTOS wrapper around the USB stack. It creates the tasks for USB enumeration and data handling
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+PRD: Professional USB-CLI control system
+
+1. Hardware Specification & Pin Mapping
+
+The system targets the LPC55S69JBD64 (U1). Control of the RGB LED is achieved via three dedicated GPIO pins on Port 1. Because the hardware is wired in an Active-Low configuration (Common Anode), the GPIO must sink current (Logic 0) to illuminate the LED.
+
+Signal	GPIO	Schematic Pin	Active Level	SDK Constant
+Red	PIO1_1	39		Low (0=ON)	BOARD_LED_RED_GPIO_PIN
+Blue	PIO1_2	41		Low (0=ON)	BOARD_LED_BLUE_GPIO_PIN
+Green	PIO1_3	42		Low (0=ON)	BOARD_LED_GREEN_GPIO_PIN
+
+1.1 Clocking & USB PHY Configuration
+
+- Reference Clock: External 32MHz Crystal (Y1) on Pins 19/20.
+- USB Controller: USB1 (High-Speed IP).
+- PHY Requirements: The USB1 PLL must be engaged to provide the 480MHz PHY clock.
+- Clock Tree: Main Clock at 150MHz (PLL0); USB1 High Speed Clock sourced from the USB PLL.
+- VBUS Sensing: Mandatory sensing on Pin 26 (USB1_VBUS). USB_DeviceCdcVcomInit must use physical VBUS detection to support hot-plugging.
+
+2. Software Architecture (MCUXpresso SDK Based)
+
+The firmware is built upon the middleware.usb.device and middleware.freertos-kernel components.
+
+2.1 Baseline SDK Examples
+
+- dev_cdc_vcom_freertos: Handles USB stack, endpoint management, and CDC enumeration.
+- USB String Descriptors: The usb_device_descriptor.c must be modified to reflect the following identity:
+	- Product String: "ShamanLink"
+	- Manufacturer String: "MakeyDooey"
+
+2.2 Task Priority & Scheduling
+
+Task Name	Priority	Stack Size	Responsibility
+USB_Device_Task	4 (High)	2048		USB stack maintenance and endpoint ISR handling.
+CLI_Task	3		4096		String parsing, command execution, and LED GPIO control.
+Idle_Task	0		-		System sleep / low-power entry.
+
+2.3 Buffer Strategy
+
+- Mechanism: StreamBufferHandle_t (Thread-safe FIFO).
+- RX Buffer (512B): USB ISR pushes raw bytes here via xStreamBufferSendFromISR.
+- TX Buffer (1024B): CLI task pushes response strings; USB task pulls and sends via USB_DeviceCdcAcmSend.
+
+3. CLI Command Interface & Logic
+
+The CLI shall implement a VT100-compatible interface. Logic Note: Since LEDs are Active-Low, the software logic is inverted: Logic 0 = ON, Logic 1 = OFF.
+
+3.1 Color Logic Matrix (Active-Low)
+
+Command String 	Red (1_1)	Blue (1_2)	Green (1_3)
+rgb red 	0		1		1
+rgb green	1		1		0
+rgb blue	1		0		1
+rgb yellow	0		1		0
+rgb magenta	0		0		1
+rgb cyan	1		0		0
+rgb white	0		0		0
+rgb off		1		1		1
+
+3.2 Error Handling & State
+
+- Invalid Input: Returns "Error: Unknown color. Type 'help' for valid options."
+- Boot State: All GPIOs (39, 41, 42) must be initialized to Logic 1 in BOARD_InitPins().
+	- Warning: Initializing to Logic 0 would cause the LED to glow white during the boot/enumeration phase.
+
+4. Success Criteria
+- Enumeration: Device appears as "LPC55S69 USB High-Speed VCOM" in Host Device Manager.
+- Logic Verification: Scope probe confirms Logic High (3.3V) on pins when rgb off is sent.
+- Latency: Physical LED state must update within 10ms of the carriage return character (\r) reception.
+- Stability: High-Speed PHY must sustain rapid-fire CLI input without buffer overflow.
+
+Step by Step Implementation in MCUXpresso IDE
+(gemini)
+
+1. Configure pins (Hardware Specification)
+ - Open the ConfigTools menu at the top and select Pins 		[x]
+ - Locate pins 39 (PIO1_1), 41 (PIO1_2), and 42 (PIO1_3)		[x]
+   in the routing details
+	 - the default package for the 55S69 family is the
+	 LPC55S69JDB100 - HLQFP 100 extension package, 
+ - Route them as GPIO outputs						[x]
+ - Name them LED_RED, LED_GREEN, LED_BLUE 				[x]
+	=> the ConfigTool adds the BOARD_ prefix and _GPIO_PIN suffix	[x]
+ - Set the initial state to 1 (High)					[x]
+ - Ensure pin 26 is routed as USB1_VBUS					[x]
+ - Click UPDATE CODE to generate pin_mux.c				[x]
+
+2. Configure clocks
+ - Switch to the Clocks tool						[x]
+	- you can reset the perspective to bring the diagram back
+ - Choose the BOARD_BootCLockPLL150M Functional Group			[x]
+ - Ensure the main clock source is the external 32MHz crystal (Y1)	[x]
+	- Enable XTAL32M ---32MHz-> CLK_IN_EN
+	- In PLL0CLKSEL mux select the clk_in input
+	- Set PLL0 mode (top of screen) to Normal, default: Power_down
+ - Verify that PLL0 is configured to output 150MHz for the		[x]
+   main system clock
+ - Verify that the USB1 PLL is enabled, sourced from the 16MHz crystal	[x]
+ - Click UPDATE CODE							[x]
+
+3.Modify USB Descriptors
+ - change manufacturer and product strings (accounting for UTF16L)      [x]
+
+Antigravity Walkthrough
+- usb_device_config.h [+1 -1]
+	changed USB_DEVICE_CONFIG_USE_TASK definition from 0 to 1
+
+- virtual_com.h [+7 -1]
+	changed APP_USB_TASK_PRIORITY from (tskIDLE_PRIORITY + 5) to (tskIDLE_PRIORITY + 4)
+	added:
+		#define APP_CLI_TASK_PRIORITY  		(tskIDLE_PRIORITY + 3)
+		#define APP_MAIN_TASK_PRIORITY 		(tskIDLE_PRIORITY - 1)
+		#define RX_BUFFER_SIZE 			512
+		#define TX_BUFFER_SIZE 			1024 
+		#define configCOMMAND_INIT_OUTPUT_SIZE 	256
+
+- virtual_com.c [+191 -127]
+	added:
+		#include "FreeRTOS_CLI.h"
+		#include <string.h>
+
+Attempt 1: SUCCESSFUL 
+NOTE:
+ - USB Device Enumeration Does not show up as MakeyDooey, instead showing up as "USB Serial Device"
+ - On using the screen command, the CLI does not output a welcome message like the code suggests
+
+To attach USB and check CLI: 
+1. run wsl ~ to instantiate wsl instance
+2. in Powershell with Administrator priviledges
+	usbipd detach --all
+	usbipd list
+	usbipd attach --wsl --busid <BUSID> --auto-attach
+
+3. in WSL, run
+	lsusb -t
+	ls -l /dev/ttyACM*
+	screen /dev/ttyACM0 115200

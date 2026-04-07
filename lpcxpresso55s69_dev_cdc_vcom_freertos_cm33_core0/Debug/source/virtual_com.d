@@ -96,6 +96,7 @@ source/virtual_com.o source/virtual_com.d: ../source/virtual_com.c \
  ../source/FreeRTOS_CLI.h ../source/cli_commands.h \
  ../source/usb_device_descriptor.h ../source/virtual_com.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\usb\phy/usb_phy.h
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\source\mcux_config.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/board.h:
@@ -196,4 +197,5 @@ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_v
 ../source/usb_device_descriptor.h:
 ../source/virtual_com.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\usb\phy/usb_phy.h:

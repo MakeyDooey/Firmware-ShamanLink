@@ -1,4 +1,5 @@
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_gpio.h:186:20:GPIO_PortSet	24	static
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_gpio.h:198:20:GPIO_PortClear	24	static
-../source/cli_commands.c:21:19:prvRGBCommand	32	static
-../source/cli_commands.c:64:6:Register_CLI_Commands	8	static
+../source/cli_commands.c:40:19:prvRGBCommand	32	static
+../source/cli_commands.c:69:19:prvUARTCommand	304	static
+../source/cli_commands.c:184:6:Register_CLI_Commands	8	static

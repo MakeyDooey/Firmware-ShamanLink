@@ -11,8 +11,8 @@ source/cli_commands.o source/cli_commands.d: ../source/cli_commands.c \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\portable\GCC\ARM_CM33_NTZ\non_secure/portmacrocommon.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/mpu_wrappers.h \
  ../source/FreeRTOS_CLI.h \
- C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h \
- C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/board.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/clock_config.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device/fsl_device_registers.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device/LPC55S69_cm33_core0.h \
@@ -70,13 +70,13 @@ source/cli_commands.o source/cli_commands.d: ../source/cli_commands.c \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device\periph/PERI_WWDT.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common_arm.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_clock.h \
- C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h \
- C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/board.h \
- C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/clock_config.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_gpio.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_iocon.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h \
+ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/task.h \
  C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/list.h
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\source\mcux_config.h:
@@ -91,8 +91,8 @@ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_v
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\portable\GCC\ARM_CM33_NTZ\non_secure/portmacrocommon.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/mpu_wrappers.h:
 ../source/FreeRTOS_CLI.h:
-C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h:
-C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/board.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/clock_config.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device/fsl_device_registers.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device/LPC55S69_cm33_core0.h:
@@ -150,12 +150,12 @@ C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_v
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\device\periph/PERI_WWDT.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common_arm.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_clock.h:
-C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h:
-C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/board.h:
-C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\board/clock_config.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_common.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_reset.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_gpio.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_iocon.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\drivers/fsl_usart.h:
+C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/stream_buffer.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/task.h:
 C:\Users\MD\Documents\MCUXpressoIDE_25.6.136\workspace\lpcxpresso55s69_dev_cdc_vcom_freertos_cm33_core0\freertos\freertos-kernel\include/list.h:

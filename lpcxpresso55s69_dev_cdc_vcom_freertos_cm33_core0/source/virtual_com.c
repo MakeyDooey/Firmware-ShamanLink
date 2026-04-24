@@ -20,7 +20,8 @@
 #include "usb_device_ch9.h"
 #include "usb_device_class.h"
 
-/* The CDC ACM header depends on usb_device_class.h, so we break the auto-sort block here */
+/* The CDC ACM header depends on usb_device_class.h, so we break the auto-sort
+ * block here */
 #include "usb_device_cdc_acm.h"
 
 #include "FreeRTOS_CLI.h"
@@ -79,8 +80,8 @@ usb_status_t USB_DeviceCdcVcomCallback(class_handle_t handle, uint32_t event,
                                        void *param);
 usb_status_t USB_DeviceCallback(usb_device_handle handle, uint32_t event,
                                 void *param);
-void BOARD_InitUART0(void);
-void FLEXCOMM0_IRQHandler(void);
+void BOARD_InitUART1(void);
+void FLEXCOMM1_IRQHandler(void);
 
 /*******************************************************************************
  * Variables
@@ -126,9 +127,9 @@ StreamBufferHandle_t xRxStreamBuffer;
 StreamBufferHandle_t xTxStreamBuffer;
 SemaphoreHandle_t xTxSemaphore;
 
-/* Stream buffer for UART0 RX */
+/* Stream buffer for UART1 RX */
 volatile bool g_uartResponseMapping;
-StreamBufferHandle_t xUart0RxStream = NULL;
+StreamBufferHandle_t xUart1RxStream = NULL;
 /* Flag to redirect UART traffic to the query handler */
 
 /* USB device class information */
@@ -628,18 +629,18 @@ void USB_Tx_Task(void *handle) {
 }
 
 static void SendToAll(const char *pcBuffer, size_t xLen) {
-    if (pcBuffer == NULL || xLen == 0) {
-        return;
-    }
+  if (pcBuffer == NULL || xLen == 0) {
+    return;
+  }
 
-    /* 1. Send to USB: Push to the StreamBuffer for the USB_Tx_Task to handle */
-    if (xTxStreamBuffer != NULL) {
-        xStreamBufferSend(xTxStreamBuffer, pcBuffer, xLen, portMAX_DELAY);
-    }
+  /* 1. Send to USB: Push to the StreamBuffer for the USB_Tx_Task to handle */
+  if (xTxStreamBuffer != NULL) {
+    xStreamBufferSend(xTxStreamBuffer, pcBuffer, xLen, portMAX_DELAY);
+  }
 
-    /* 2. Send to UART: Write directly to the hardware pins.
-       WriteBlocking waits for the hardware FIFO to have space for each byte. */
-    //USART_WriteBlocking(USART0, (uint8_t *)pcBuffer, xLen);
+  /* 2. Send to UART: Write directly to the hardware pins.
+     WriteBlocking waits for the hardware FIFO to have space for each byte. */
+  // USART_WriteBlocking(USART1, (uint8_t *)pcBuffer, xLen);
 }
 
 /*!
@@ -647,81 +648,85 @@ static void SendToAll(const char *pcBuffer, size_t xLen) {
  */
 
 void CLI_Task(void *handle) {
-    char cRxedChar;
-    uint8_t ucInputIndex = 0;
-    static char cInputString[64];
-    char *pcOutputString;
-    BaseType_t xMoreDataToFollow;
+  char cRxedChar;
+  uint8_t ucInputIndex = 0;
+  static char cInputString[64];
+  char *pcOutputString;
+  BaseType_t xMoreDataToFollow;
 
-    Register_CLI_Commands();
-    pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+  Register_CLI_Commands();
+  pcOutputString = FreeRTOS_CLIGetOutputBuffer();
 
-    /* Initial prompt - now appears on BOTH USB and UART */
-    SendToAll("\r\n> ", 4);
+  /* Initial prompt - now appears on BOTH USB and UART */
+  SendToAll("\r\n> ", 4);
 
-    while (1) {
-        /* Receive from xRxStreamBuffer (fed by both USB callback and UART ISR) */
-        if (xStreamBufferReceive(xRxStreamBuffer, &cRxedChar, 1, portMAX_DELAY) > 0) {
+  while (1) {
+    /* Receive from xRxStreamBuffer (fed by both USB callback and UART ISR) */
+    if (xStreamBufferReceive(xRxStreamBuffer, &cRxedChar, 1, portMAX_DELAY) >
+        0) {
 
-            /* Handle Enter Key */
-            if (cRxedChar == '\r' || cRxedChar == '\n') {
-                SendToAll("\r\n", 2);
+      /* Handle Enter Key */
+      if (cRxedChar == '\r' || cRxedChar == '\n') {
+        SendToAll("\r\n", 2);
 
-                if (ucInputIndex > 0) {
-                    cInputString[ucInputIndex] = '\0';
-                    do {
-                        xMoreDataToFollow = FreeRTOS_CLIProcessCommand(
-                            cInputString, pcOutputString, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+        if (ucInputIndex > 0) {
+          cInputString[ucInputIndex] = '\0';
+          do {
+            xMoreDataToFollow =
+                FreeRTOS_CLIProcessCommand(cInputString, pcOutputString,
+                                           configCOMMAND_INT_MAX_OUTPUT_SIZE);
 
-                        if (strlen(pcOutputString) > 0) {
-                            SendToAll(pcOutputString, strlen(pcOutputString));
-                        }
-                    } while (xMoreDataToFollow != pdFALSE);
-                    ucInputIndex = 0;
-                }
-                SendToAll("\r\n> ", 4);
-
-            /* Handle Backspace */
-            } else if (cRxedChar == '\b' || cRxedChar == 0x7F) {
-                if (ucInputIndex > 0) {
-                    ucInputIndex--;
-                    SendToAll("\b \b", 3);
-                }
-            /* Handle Standard Characters */
-            } else {
-                if (ucInputIndex < sizeof(cInputString) - 1 && cRxedChar >= ' ' && cRxedChar <= '~') {
-                    cInputString[ucInputIndex++] = cRxedChar;
-                    /* Echo character back to both terminals */
-                    SendToAll(&cRxedChar, 1);
-                }
+            if (strlen(pcOutputString) > 0) {
+              SendToAll(pcOutputString, strlen(pcOutputString));
             }
+          } while (xMoreDataToFollow != pdFALSE);
+          ucInputIndex = 0;
         }
+        SendToAll("\r\n> ", 4);
+
+        /* Handle Backspace */
+      } else if (cRxedChar == '\b' || cRxedChar == 0x7F) {
+        if (ucInputIndex > 0) {
+          ucInputIndex--;
+          SendToAll("\b \b", 3);
+        }
+        /* Handle Standard Characters */
+      } else {
+        if (ucInputIndex < sizeof(cInputString) - 1 && cRxedChar >= ' ' &&
+            cRxedChar <= '~') {
+          cInputString[ucInputIndex++] = cRxedChar;
+          /* Echo character back to both terminals */
+          SendToAll(&cRxedChar, 1);
+        }
+      }
     }
+  }
 }
 
+void BOARD_InitUART1(void) {
+  usart_config_t uartConfig;
 
-void BOARD_InitUART0(void) {
-    usart_config_t uartConfig;
+  /* Directs the 12MHz FRO or XTAL (depending on your board config) to Flexcomm
+   * 1 */
+  CLOCK_AttachClk(kFRO12M_to_FLEXCOMM1);
 
-    /* Directs the 12MHz FRO or XTAL (depending on your board config) to Flexcomm 0 */
-    CLOCK_AttachClk(kFRO12M_to_FLEXCOMM0);
+  USART_GetDefaultConfig(&uartConfig);
+  uartConfig.baudRate_Bps = 9600U;
+  uartConfig.enableTx = true;
+  uartConfig.enableRx = true;
 
-    USART_GetDefaultConfig(&uartConfig);
-    uartConfig.baudRate_Bps = 115200U;
-    uartConfig.enableTx = true;
-    uartConfig.enableRx = true;
+  /* Initialize with the 32MHz clock frequency */
+  /* Make sure the frequency matches the AttachClk choice above */
+  USART_Init(USART1, &uartConfig, CLOCK_GetFlexCommClkFreq(1U));
 
-    /* Initialize with the 32MHz clock frequency */
-    /* Make sure the frequency matches the AttachClk choice above */
-    USART_Init(USART0, &uartConfig, CLOCK_GetFlexCommClkFreq(0U));
+  /* kUSART_RxLevelInterruptEnable is the standard SDK name for 'FIFO not empty'
+   */
+  USART_EnableInterrupts(USART1, kUSART_RxLevelInterruptEnable);
 
-    /* kUSART_RxLevelInterruptEnable is the standard SDK name for 'FIFO not empty' */
-    USART_EnableInterrupts(USART0, kUSART_RxLevelInterruptEnable);
-
-    NVIC_SetPriority(FLEXCOMM0_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1);
-    EnableIRQ(FLEXCOMM0_IRQn);
+  NVIC_SetPriority(FLEXCOMM1_IRQn,
+                   configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1);
+  EnableIRQ(FLEXCOMM1_IRQn);
 }
-
 
 #if defined(__CC_ARM) || (defined(__ARMCC_VERSION)) || defined(__GNUC__)
 int main(void)
@@ -736,9 +741,9 @@ void main(void)
   xRxStreamBuffer = xStreamBufferCreate(RX_BUFFER_SIZE, 1);
   xTxStreamBuffer = xStreamBufferCreate(TX_BUFFER_SIZE, 1);
 
-  xUart0RxStream = xStreamBufferCreate(128, 1);
+  xUart1RxStream = xStreamBufferCreate(128, 1);
 
-  BOARD_InitUART0();
+  BOARD_InitUART1();
 
   xTxSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(xTxSemaphore); /* Prime the semaphore */
@@ -786,52 +791,59 @@ void main(void)
 #endif
 }
 
-void FLEXCOMM0_IRQHandler(void) {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    uint32_t status = USART_GetStatusFlags(USART0);
+void FLEXCOMM1_IRQHandler(void) {
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  uint32_t status = USART_GetStatusFlags(USART1);
 
-    if (status & kUSART_RxFifoNotEmptyFlag) {
-        uint8_t data = USART_ReadByte(USART0);
+  /* Clear any framing, parity, or noise errors which often happen during RS485
+   * half-duplex transition */
+  uint32_t errFlags =
+      status & (kUSART_RxError | kUSART_TxError | kUSART_FramingErrorFlag |
+                kUSART_ParityErrorFlag | kUSART_NoiseErrorFlag);
+  if (errFlags) {
+    USART_ClearStatusFlags(USART1, errFlags);
+  }
 
-        /* ROUTING LOGIC:
-           If we are in 'Response Mode', send to the Query buffer.
-           Otherwise, send to the standard CLI buffer. */
-        if (g_uartResponseMapping && (xUart0RxStream != NULL)) {
-            xStreamBufferSendFromISR(xUart0RxStream, &data, 1, &xHigherPriorityTaskWoken);
-        }
-        else if (xRxStreamBuffer != NULL) {
-            xStreamBufferSendFromISR(xRxStreamBuffer, &data, 1, &xHigherPriorityTaskWoken);
-        }
+  if (status & kUSART_RxFifoNotEmptyFlag) {
+    uint8_t data = USART_ReadByte(USART1);
+
+    /* ROUTING LOGIC:
+       If we are in 'Response Mode', send to the Query buffer.
+       Otherwise, send to the standard CLI buffer. */
+    if (g_uartResponseMapping && (xUart1RxStream != NULL)) {
+      xStreamBufferSendFromISR(xUart1RxStream, &data, 1,
+                               &xHigherPriorityTaskWoken);
+    } else if (xRxStreamBuffer != NULL) {
+      xStreamBufferSendFromISR(xRxStreamBuffer, &data, 1,
+                               &xHigherPriorityTaskWoken);
     }
+  }
 
-    if (status & (kUSART_RxError | kUSART_TxError)) {
-        USART_ClearStatusFlags(USART0, kUSART_RxError | kUSART_TxError);
-    }
-
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-//void FLEXCOMM0_IRQHandler(void) {
-//    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+// void FLEXCOMM0_IRQHandler(void) {
+//     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 //
-//    /* Get status flags */
-//    uint32_t status = USART_GetStatusFlags(USART0);
+//     /* Get status flags */
+//     uint32_t status = USART_GetStatusFlags(USART0);
 //
-//    /* Check for Data in the FIFO */
-//    if (status & kUSART_RxFifoNotEmptyFlag) {
-//        uint8_t data = USART_ReadByte(USART0);
+//     /* Check for Data in the FIFO */
+//     if (status & kUSART_RxFifoNotEmptyFlag) {
+//         uint8_t data = USART_ReadByte(USART0);
 //
-//        /* Send to the shared CLI buffer */
-//        if (xRxStreamBuffer != NULL) {
-//            xStreamBufferSendFromISR(xRxStreamBuffer, &data, 1, &xHigherPriorityTaskWoken);
-//        }
-//    }
+//         /* Send to the shared CLI buffer */
+//         if (xRxStreamBuffer != NULL) {
+//             xStreamBufferSendFromISR(xRxStreamBuffer, &data, 1,
+//             &xHigherPriorityTaskWoken);
+//         }
+//     }
 //
-//    /* FIX: LPC55S69 specific error flag names */
-//    if (status & (kUSART_RxError | kUSART_TxError)) {
-//        /* Clear errors using the FIFO statistics/status clear */
-//        USART_ClearStatusFlags(USART0, kUSART_RxError | kUSART_TxError);
-//    }
+//     /* FIX: LPC55S69 specific error flag names */
+//     if (status & (kUSART_RxError | kUSART_TxError)) {
+//         /* Clear errors using the FIFO statistics/status clear */
+//         USART_ClearStatusFlags(USART0, kUSART_RxError | kUSART_TxError);
+//     }
 //
-//    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-//}
+//     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+// }

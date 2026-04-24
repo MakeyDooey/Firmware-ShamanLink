@@ -26,6 +26,7 @@ extern "C" {
 void BOARD_InitBootPins(void);
 
 #define IOCON_PIO_DIGITAL_EN 0x0100u  /*!<@brief Enables digital function */
+#define IOCON_PIO_FUNC0 0x00u         /*!<@brief Selects pin function 0 */
 #define IOCON_PIO_FUNC1 0x01u         /*!<@brief Selects pin function 1 */
 #define IOCON_PIO_FUNC7 0x07u         /*!<@brief Selects pin function 7 */
 #define IOCON_PIO_INV_DI 0x00u        /*!<@brief Input function is not inverted */

@@ -1,38 +1,16 @@
-TODO:
+***SOURCE OF TRUTH***
 
 (Dom's Validates)
  -> LEDs / reset button 		[x]
- -> UART
- -> DC-DC internal converter (turn on)
- -> CLK
+ -> UART				[x]
+ -> DC-DC internal converter (turn on) 
+ -> CLK (external crystal) 		[x]
  -> RS-485 connection (w/ UART)
-- - - - - - - - - - - - - - - - - - - - // theoretical stopping point
  -> SWD out
  -> JTAG out 
- -> USB comms
- -> MicroSD
- -> Doom?
+ -> USB comms				[x]
 
-Recommended Development Workflow:
-
-1. blinky
-2. establish VCOM over USB, blink the LED based on user input to FreeRTOSCLI task
-3. write a command that sends a string out of the RS485 with UART
-
-Project Description:
-I want to program an LPC55S69 using MCUXpresso IDE to serve as a high-performance programmer and bus orchestrator for STM32H7 and STM32G0 MCUs. I have a custom PCB and will use MCULink hardware to initially flash the LPC55S69 via its SWD pins. The goal is for a user to connect a computer to the PCB's USB-C port and interact with a FreeRTOS+CLI (instantiated over a USB CDC VCOM interface) to execute commands. These commands include flashing a target board via the SWD protocol using designated pins, sending/receiving messages over a half-duplex multi-drop RS485 bus where the LPC55S69, H7, and G0 all reside, and manually toggle certain on-board user LEDs on or off.
-
-The design must leverage the LPC55S69’s dual-core architecture: Core 0 (master) will manage the FreeRTOS tasks, USB stack, and CLI parsing, while Core 1 (worker) will handle timing-critical SWD bit-banging and low-level RS485 direction control (DE/RE) to ensure high-speed, reliable communication. Inter-core communication will be handled via OpenAMP (RPMsg-Lite) to create a seamless data pipeline. When flashing a target, no files should be stored on the NXP; instead, data should be streamed from the host computer, passed through the OpenAMP buffers, and written to the target in real-time. Finally, the system will use onboard LEDs to provide visual telemetry, such as indicating an active USB connection, bus activity, or specific flashing errors.
-
-// Establishing a CDC USB VCOM on the LPC55S69
-
-(CDC USB Wikipedia) 
-Abstract Control Model (ACM): Protocol defined on the CDC specification that can be used to implement a general-purpose serial UART. Commonly implemented in microcontrollers to provide a serial console for configuring and debugging embedded system. 
-
-(Virtual COM port Wikipedia) 
-A software representation of a serial port that either does not connect to a real serial port, or adds functionality to a real serial port through software extension. 
-
-// Using the MCU-Link to program the ShamanLink
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 (UM11931 User Manual from NXP docs)
 MCU-Link Base standalone Debug Probe
@@ -53,6 +31,7 @@ J6: SWD connector for connection to tagret system
 J7: VCOM connection 
 J8: Digital expansion connector
 
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Installation and Firmware Options
  - Factory programmed with NXP's CMSIS-DAP protocol based firmware
@@ -72,7 +51,6 @@ Manually updating MCU-Link firmware
  7. Unplug the board, remove J3, and reconnect the board 
  8. After programming the MCU-Link with the CMSIS-DAP firmware, a USB serial bus device and a virtual com port will enumerate. The status LED repeatedly fades from on to off and back again ("breathing") 
 
-// Success  
 C:\nxp\LinkServer_25.6.131>linkserver probes
   #  Description                       Serial         Device    Board
 ---  --------------------------------  -------------  --------  -------
@@ -80,14 +58,7 @@ C:\nxp\LinkServer_25.6.131>linkserver probes
 
 Use with other IDEs (Not MCUXpresso)
 
-MCU-Link should be recognized as a CMSIS-DAP probe by other IDEs, and should be usable with standard settings for that probe type. Follow IDE vendor instructions for setup and use of CMSIS-DAP.
-
-Feature Descriptions
- - Note: the MCU-Link can be back-powered by a target if the MCU-Link itself is not powered via USB. For this reason it is recommended that the power be applied to the MCU-Link before the target.
- - The MCU-Link Base Probe cannot power a target system, so uses a sensing circuit to detect the target supply voltage and set up level shifter voltages accordingly. 
- - If issues are seen with the target system supply being affected by the MCU-Link being connected then R16 may be removed and SJ1 changed to connect to position 1-2. This will fix the level shifters at the voltage level seen at pin 1 of the SWD connector, and require that the target supply can support the VCCB input requirements of the level shifter devices.
-
-================================================================================================
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 MCU-Link <=> ShamanLink connection / powering order (to unplug go in reverse order)
 1. Power MCU-Link
@@ -103,28 +74,7 @@ MCU-Link <=> ShamanLink connection / powering order (to unplug go in reverse ord
 		SWDIO (white, top left), 
 		SWDRESET (orange, top right)
 
-================================================================================================
-
-MCUXpresso IDE and the MCU-Link
-
-MCUXpresso IDEs will recognize any type of MCU-Link and will show the probe types and unique identifiers
-of all probes it finds in the probe discovery dialog when starting a debug session. This dialog will also show
-the firmware version, and will show a warning if the firmware is not the latest version. See Section 3.2 for
-information on how to update the firmware. MCUXpresso IDE 11.3 or later must be used when using MCU-Link,
-and version 3.xxx onwards must be used with MCUXpresso for VS Code.
-
-// 2026-04-03: blinky done, usb-freertos test is next 
-
-System prompt
-
-I want to program a LPC55S69 with a USB CDC VCOM and freeRTOS+CLI to be able to toggle on/off different LEDs on my custom PCB using commands. 
-
-Obs.: (gemini) the USB interface is connected to USB1 (Pins 24 & 25, USB1_DP and DM). USB1 on the LPC55S69 is the high-speed controller. This requires specific PHY clocking compared to the full-speed (USB0) controller. 
-
-Recommended SDK Examples
- - dev_cdc_vcom_freertos: handles the RTOS wrapper around the USB stack. It creates the tasks for USB enumeration and data handling
-
- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 PRD: Professional USB-CLI control system
 
@@ -145,17 +95,6 @@ Green	PIO1_3	42		Low (0=ON)	BOARD_LED_GREEN_GPIO_PIN
 - Clock Tree: Main Clock at 150MHz (PLL0); USB1 High Speed Clock sourced from the USB PLL.
 - VBUS Sensing: Mandatory sensing on Pin 26 (USB1_VBUS). USB_DeviceCdcVcomInit must use physical VBUS detection to support hot-plugging.
 
-2. Software Architecture (MCUXpresso SDK Based)
-
-The firmware is built upon the middleware.usb.device and middleware.freertos-kernel components.
-
-2.1 Baseline SDK Examples
-
-- dev_cdc_vcom_freertos: Handles USB stack, endpoint management, and CDC enumeration.
-- USB String Descriptors: The usb_device_descriptor.c must be modified to reflect the following identity:
-	- Product String: "ShamanLink"
-	- Manufacturer String: "MakeyDooey"
-
 2.2 Task Priority & Scheduling
 
 Task Name	Priority	Stack Size	Responsibility
@@ -169,33 +108,7 @@ Idle_Task	0		-		System sleep / low-power entry.
 - RX Buffer (512B): USB ISR pushes raw bytes here via xStreamBufferSendFromISR.
 - TX Buffer (1024B): CLI task pushes response strings; USB task pulls and sends via USB_DeviceCdcAcmSend.
 
-3. CLI Command Interface & Logic
-
-The CLI shall implement a VT100-compatible interface. Logic Note: Since LEDs are Active-Low, the software logic is inverted: Logic 0 = ON, Logic 1 = OFF.
-
-3.1 Color Logic Matrix (Active-Low)
-
-Command String 	Red (1_1)	Blue (1_2)	Green (1_3)
-rgb red 	0		1		1
-rgb green	1		1		0
-rgb blue	1		0		1
-rgb yellow	0		1		0
-rgb magenta	0		0		1
-rgb cyan	1		0		0
-rgb white	0		0		0
-rgb off		1		1		1
-
-3.2 Error Handling & State
-
-- Invalid Input: Returns "Error: Unknown color. Type 'help' for valid options."
-- Boot State: All GPIOs (39, 41, 42) must be initialized to Logic 1 in BOARD_InitPins().
-	- Warning: Initializing to Logic 0 would cause the LED to glow white during the boot/enumeration phase.
-
-4. Success Criteria
-- Enumeration: Device appears as "LPC55S69 USB High-Speed VCOM" in Host Device Manager.
-- Logic Verification: Scope probe confirms Logic High (3.3V) on pins when rgb off is sent.
-- Latency: Physical LED state must update within 10ms of the carriage return character (\r) reception.
-- Stability: High-Speed PHY must sustain rapid-fire CLI input without buffer overflow.
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Step by Step Implementation in MCUXpresso IDE
 (gemini)
@@ -229,28 +142,8 @@ Step by Step Implementation in MCUXpresso IDE
 3.Modify USB Descriptors
  - change manufacturer and product strings (accounting for UTF16L)      [x]
 
-Antigravity Walkthrough
-- usb_device_config.h [+1 -1]
-	changed USB_DEVICE_CONFIG_USE_TASK definition from 0 to 1
 
-- virtual_com.h [+7 -1]
-	changed APP_USB_TASK_PRIORITY from (tskIDLE_PRIORITY + 5) to (tskIDLE_PRIORITY + 4)
-	added:
-		#define APP_CLI_TASK_PRIORITY  		(tskIDLE_PRIORITY + 3)
-		#define APP_MAIN_TASK_PRIORITY 		(tskIDLE_PRIORITY - 1)
-		#define RX_BUFFER_SIZE 			512
-		#define TX_BUFFER_SIZE 			1024 
-		#define configCOMMAND_INIT_OUTPUT_SIZE 	256
-
-- virtual_com.c [+191 -127]
-	added:
-		#include "FreeRTOS_CLI.h"
-		#include <string.h>
-
-Attempt 1: SUCCESSFUL 
-NOTE:
- - USB Device Enumeration Does not show up as MakeyDooey, instead showing up as "USB Serial Device"
- - On using the screen command, the CLI does not output a welcome message like the code suggests
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 To attach USB and check CLI: 
 1. run wsl ~ to instantiate wsl instance
@@ -263,3 +156,192 @@ To attach USB and check CLI:
 	lsusb -t
 	ls -l /dev/ttyACM*
 	screen /dev/ttyACM0 115200
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=== NEW Wiring setup -- UART testing ===
+(make sure both devices are powered before connecting them together)
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Programming Phase
+PC|
+  | [COM4] -------- [USB-C] MCU_Link
+  |		    		| 
+  |		    / (3) white, (4) yellow, x, x, (5) orange \
+  | 		    \ (2) red  ,     x     , x, x, (1) grey   /
+  |		    		| 
+  | [COM8] -------- [USB-C] ShamanLink
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Testing Phase
+PC|
+  | [COM9] -------- [USB-B] Arduino Uno
+  |		    		| 
+  |		    / x, x, (3) black,     x    ,     x    \
+  | 		    \ x, x,     x    , (2) white, (1) blue /
+  |		    		| 
+  | [COM8] -------- [USB-C] ShamanLink
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Combined
+PC          |        (1)
+USB-A port 1| [COM4] --- MCU_Link --------------------------------------|
+            |						                |
+            |        (2)               / | (4) white | (5) yellow | (8) blue   | ( ) x     | (6) orange | \
+USB-C port 1| [COM8] --- ShamanLink - |                                                                    |
+            |                          \ | (3) red   | ( ) x      | (2) purple | (7) green | (1) grey   | /
+            |        (3)                                                |
+USB-A port 2| [COM11] --- ESP32S3 Wroom --------------------------------|
+            |
+
+ORDER: grey => black => red => white => yellow => orange => green => blue
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+ShamanLink <=> MotorTotem RS-485 connections
+
+Shaman 1 x            6 Motor Totem	
+       2 x            5 (reverse order)
+       3 - yellow --- 4
+       4 - green ---- 3
+       5 - blue ----- 2
+       6 x            1
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+IN CASE OF FUCK UP (target not connected on LPC)
+ 1. Connect everything as you would normally
+ 2. Connect blue wire (GND) to ProISP (top, 2nd from the right)
+ 3. Reset button (few secs)
+ 4. Mass Erase: Debug Your Project > LinkServer > Mass Erase Action using Link Server
+ 5. Unplug blue wire
+ 6. Reset again
+ 7. Profit
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+How RS-845 works: 	
+
+(Wikipedia) RS-485 is an electrical signaling standard using differential signaling over twisted pair. It is generally accepted that it can be used with data rates up to 10Mbit/s, or the product of data rate and distance should not exceed 10^8. The RS-485 uses three-state logic allowing individual transmitters to be deactivated. This allows RS-485 to implement linear bus topologies using only two wires.
+
+    Linear bus topology				  Star topology			     Ring topology
+
+           (node)        (node)                       (node)	                     ___(node)___		
+             |             |                            |                           /            \
+(root) ------+------+------+                 (node)---(root)---(node)	         (node)        (node)	
+                    |                                 /    \                        \            /
+                  (node)                          (node)  (node)                  (node)------(node)
+
+Mode of Operation
+
+Different receiver levels:
+ - binary 1 (OFF): Voa - Vob < -200mV ~= Voa < Vob
+ - binary 0 (ON):  Voa - Vob > +200mV ~= Voa > Vob
+
+Signal	Mark (logic 1) 	Space (logic 0)
+A	Low		High
+B	High 		Low
+
+
+Generic Implementation 					THVD1450 Simplified Schematic
+
+	Driver enable ---+			                  1  /|------|
+        	         |                            PIO0_13  R ---<Z|      |
+	Transmit data ---|\----+------- (+)                    __ 2 o\|o-+   |
+        	         | >   |                      PIO0_20  RE---|    |   | 7
+                	 |/o---)-+----- (-)                |      3      +---)--- B
+	                 |     | |                         +-  DE---|    |   | 6
+        	         V     | | +--- COM                       4 |\ |o+   +--- A
+                	       | | |                  PIO0_14  D ---| >|     |
+	                /|-----+ | V                                |/ |-----|
+	Receive data---< |       |
+	                \|o------+
+	                 |
+	                 V
+	
+		  COM ---+
+                	 |
+	                 V
+
+(TI datasheet)
+THVD1450 Driver Function Table
+
+INPUT	ENABLE	OUTPUTS	FUNCTION
+D	DE	A  B	
+H	H	H  L	Actively drive bus high
+L	H	L  H	Actively drive bus low
+X	L	Z  Z	Driver disabled
+X	Open    Z  Z	Driver disabled by default
+Open	H	H  L 	Actively drive bus high by default
+
+THVD1450 Receiver Function Table 
+V_TH+ => positive-going input threshold voltage: under any specific conditions, V_TH+ is assured to be at least V_HYS higher than V_TH-
+
+V_TH- => negative-going input threshold voltage
+
+DIFFERENTIAL INPUT	ENABLE	OUTPUT	FUNCTION
+			__
+V_ID  = V_A - V_B	RE	R	
+V_TH+ < V_ID 		L 	H 	Receive valid bus high
+V_TH- < V_ID < V_TH+	L 	? 	Indeterminate bus state
+V_ID  < V_TH-		L	L 	Receive valid bus low
+X			H	Z	Receiver disabled
+X			Open	Z	Receiver disabled by default
+Open-circuit bus	L	H	Fail-safe high output
+Short-circuit bus	L	H	Fail-safe high output
+Idle (terminated) bus	L	H	Fail-safe high output
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+ShamanLink Current Working Set of Pins
+---------------------------------------
+/* all pins with the "Pro" prefix refer to programming the ShamanLink itself, using an external board such as the MCU-Link as the programming device */
+
+(this is the top of the board, all subsequent diagrams are drawn as such)
+ RS485RX1
+          __________________________________________________________________________
+	 / (ProSWDIO) 	(ProSWDCLK) 	(PIO0_29)	(ProISP) 	(ProReset)  \    TEST1    (RGB LED)
+	|  (+3.3V)	(GND)		(GND)		(PIO0_30)	(GND)	     |
+	 \__________________________________________________________________________/
+
+ - ISP_RX: wired to PIO0_29, can be used with Flexcomm 0 for USART0 over jumpers to a target board
+ - ISP_TX: wired to PIO0_30, can be used with Flexcomm 0 for USART0 over jumpers to a target board
+
+Never set these in software, powering any of these will result in the ShamanLink being un-programmable. If this ever occurs, see the "Hard Reset" instructions to mass flash erase the board.
+
+ - ProSWDIO: wired to PIO0_12 / ADC0_10
+ - ProSWDCLK: wired to PIO0_11 / ADC0_9              
+ - ProISP: currently pulled high through external resistor for SWD, pulling low through header for ISP UART
+ - ProRESET: wired to PIO0_0 / ACMPO_A
+
+
+ S6B-XH-A
+	 /I======
+	 /|[--- x
+	  |[--- x
+	  |[--- GND (wire first)
+	  |[--- B differential signal pair
+	  |[--- A differential signal pair
+	 \|[--- +3.3V* (don't connect while programming ShamanLink) 
+	 \I======
+
+ *can be used to back-power the ShamanLink via the target board
+
+
+ Conn_ARM_SWD_TagConnect_TC2030-NL
+                  @
+		     (GND)
+	(SWO/TDO)	          (RESET)
+    @     	  (SWDCLK/TCK)	               (VCC)
+				(SWDIO/TMS)
+						     @
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+TESTING
+
+
+
+
+
+
